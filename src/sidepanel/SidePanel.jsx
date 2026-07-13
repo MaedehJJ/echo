@@ -204,7 +204,11 @@ export default function SidePanel() {
     setNote('Reading the page…')
     try {
       const page = await getPageContent()
-      runConversation([...messages, { id: crypto.randomUUID(), role: 'user', ...cmd.build({ page, args }) }])
+      // Must be awaited: runConversation sets its own "Thinking…" note right
+      // after this resolves. Without awaiting, control returns here first and
+      // this function's `finally` wipes that note before the first token
+      // arrives, leaving a blank gap with no loading indicator at all.
+      await runConversation([...messages, { id: crypto.randomUUID(), role: 'user', ...cmd.build({ page, args }) }])
     } catch (err) {
       pushAssistant(`⚠️ ${err.message}`)
     } finally {
