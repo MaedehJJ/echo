@@ -131,42 +131,6 @@ other file needs to change. A few conventions to follow:
 For anything bigger (new tool integrations, UI changes), open an issue first
 to talk through the approach before sending a large PR.
 
-## Publishing to the Chrome Web Store
-
-If you want to ship your own build (or a fork) publicly:
-
-1. **Build a clean bundle**: `npm run build`, then zip the *contents* of `dist/`
-   (not the folder itself — `manifest.json` must sit at the zip's root).
-   ```bash
-   cd dist && zip -r ../echo.zip . && cd ..
-   ```
-2. **Register as a developer** at the
-   [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-   (one-time $5 fee, if you haven't registered before).
-3. **New item → upload `echo.zip`.**
-4. **Fill out the listing**: name, description, category, at least one
-   screenshot (1280×800 or 640×400), and — importantly — the **Privacy**
-   tab's permission justifications. Echo requests:
-   - `sidePanel`, `scripting` — to open the panel and read the active tab's text
-   - `host_permissions: <all_urls>` — so page-reading and DuckDuckGo search work
-     on any site. Reviewers scrutinize broad host permissions; if you want a
-     lighter footprint, switch to `activeTab` (grants access only when the user
-     invokes the extension) and note the tradeoff: page content is only
-     readable in the same user gesture that opens the panel.
-   - Disclose that a search query is sent to DuckDuckGo when the user turns on
-     Web search — this is Echo's only network activity that isn't `localhost`.
-5. **Submit for review.** Turnaround is typically hours to a few days.
-6. **Updates**: bump `"version"` in `public/manifest.json` before every new
-   upload — the store rejects a re-upload with an unchanged version.
-
-One thing to flag to your users: the extension ID (and therefore the
-`OLLAMA_ORIGINS` value they need) is **assigned by the Store on first install**
-and differs from the ID you saw while testing unpacked. Point them at
-`chrome://extensions` to find their real ID after installing.
-
-You can also publish **unlisted** (reviewed, but not shown in search — good
-for sharing a link without a public listing) instead of public.
-
 ## Privacy
 
 By default everything runs against your local Ollama and nothing leaves your
