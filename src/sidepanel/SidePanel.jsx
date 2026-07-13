@@ -3,6 +3,7 @@ import { getModels, getCapabilities, streamChat } from './ollama.js'
 import { getPageContent } from './page.js'
 import { searchWeb, formatResults, WEB_SEARCH_TOOL } from './websearch.js'
 import { SYSTEM_PROMPT, commandList, getCommand, helpText, composeChatMessage } from './commands.js'
+import { focusSoon } from './dom.js'
 import Message from './Message.jsx'
 import Composer from './Composer.jsx'
 import EmptyState from './EmptyState.jsx'
@@ -55,11 +56,18 @@ export default function SidePanel() {
   useEffect(() => {
     if (!selectedModel) return
     let cancelled = false
-    getCapabilities(selectedModel).then((caps) => {
-      if (cancelled) return
-      setThinkingSupported(caps.includes('thinking'))
-      setToolsSupported(caps.includes('tools'))
-    })
+    getCapabilities(selectedModel)
+      .then((caps) => {
+        if (cancelled) return
+        setThinkingSupported(caps.includes('thinking'))
+        setToolsSupported(caps.includes('tools'))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('[Echo] failed to fetch model capabilities:', err)
+        setThinkingSupported(false)
+        setToolsSupported(false)
+      })
     return () => {
       cancelled = true
     }
@@ -180,9 +188,15 @@ export default function SidePanel() {
         )
       }
     } finally {
-      setStreaming(false)
-      setNote('')
-      abortRef.current = null
+      // A newer conversation may have already replaced abortRef.current (e.g.
+      // Stop/New Chat immediately followed by another send) — only reset
+      // shared state if this run is still the current one, so we don't clobber
+      // the newer conversation's streaming/note/abortRef.
+      if (abortRef.current === controller) {
+        setStreaming(false)
+        setNote('')
+        abortRef.current = null
+      }
     }
   }
 
@@ -235,7 +249,7 @@ export default function SidePanel() {
 
   function prefillCommand(name) {
     setInput('/' + name + ' ')
-    requestAnimationFrame(() => textareaRef.current?.focus())
+    focusSoon(textareaRef)
   }
 
   function handleStop() {
@@ -246,7 +260,7 @@ export default function SidePanel() {
     if (streaming) abortRef.current?.abort()
     setMessages([])
     setInput('')
-    requestAnimationFrame(() => textareaRef.current?.focus())
+    focusSoon(textareaRef)
   }
 
   const webActive = webSearch && toolsSupported

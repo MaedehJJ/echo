@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { focusSoon } from './dom.js'
 
 export default function Composer({
   commands,
@@ -44,7 +45,7 @@ export default function Composer({
     onChange('/' + name + ' ')
     setDismissed(false)
     setActiveIndex(0)
-    requestAnimationFrame(() => textareaRef.current?.focus())
+    focusSoon(textareaRef)
   }
 
   function submit() {

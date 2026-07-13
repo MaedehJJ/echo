@@ -49,6 +49,15 @@ export async function searchWeb(query, limit = 5) {
     results.push({ title: a.textContent.trim(), url, snippet })
     if (results.length >= limit) break
   }
+
+  // A zero-result page is usually a genuine "nothing found" — but it's also
+  // what we'd see if DuckDuckGo changed its markup and our selectors no
+  // longer match anything. Surface that ambiguity in the console rather than
+  // failing silently, since the caller otherwise can't tell the difference.
+  if (results.length === 0) {
+    console.warn('[Echo] web search returned zero results — either no matches, or DuckDuckGo markup changed and the scraper selectors need updating:', query)
+  }
+
   return results
 }
 
