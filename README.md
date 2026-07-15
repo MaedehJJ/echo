@@ -49,7 +49,10 @@ Then in Chrome:
 launchctl setenv OLLAMA_ORIGINS "chrome-extension://<EXTENSION_ID>"
 ```
 
-See [Ollama CORS setup](#ollama-cors-setup) below for Linux, Windows, and
+That fix resets on every reboot. On macOS, run
+`./scripts/persist-ollama-origins-macos.sh <EXTENSION_ID>` instead to make it
+permanent — see [Ollama CORS setup](#ollama-cors-setup) below for details, and
+for Linux/Windows, which persist by default.
 running Ollama manually instead of as a service.
 
 **Dev loop:** after any code change, `npm run build`, then click the ⟳ reload
@@ -151,21 +154,30 @@ in place of `<EXTENSION_ID>`. **Restart Ollama after setting the variable.**
 <details open>
 <summary><b>macOS</b></summary>
 
-If you run the **menubar app** (persists for this login session):
+If you run the **menubar app**, the quick fix only lasts until your next
+reboot/logout — `launchctl setenv` doesn't persist:
 
 ```bash
 launchctl setenv OLLAMA_ORIGINS "chrome-extension://<EXTENSION_ID>"
 # then quit Ollama from the menubar and reopen it
 ```
 
-If you run it **manually** in a terminal:
+**For a permanent fix that survives reboots**, run the setup script in this
+repo instead. It installs a LaunchAgent that reapplies the setting (and
+restarts Ollama if needed) on every login:
+
+```bash
+./scripts/persist-ollama-origins-macos.sh <EXTENSION_ID>
+```
+
+To remove it later, the script prints the exact `launchctl unload` + `rm`
+command for its own plist.
+
+If you run Ollama **manually** in a terminal instead of the menubar app:
 
 ```bash
 OLLAMA_ORIGINS="chrome-extension://<EXTENSION_ID>" ollama serve
 ```
-
-For a permanent setup, add the `launchctl setenv` line to a LaunchAgent, or export
-the variable in your `~/.zshrc` if you always start Ollama by hand.
 </details>
 
 <details>
